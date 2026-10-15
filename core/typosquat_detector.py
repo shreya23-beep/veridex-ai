@@ -15,8 +15,49 @@ HIGH_VALUE_TARGETS = [
     "ledger", "steam", "dhl", "fedex", "ups", "linkedin", "dropbox",
     "adobe", "whatsapp", "telegram", "spotify", "yahoo", "outlook",
     "icloud", "walmart", "target", "ebay", "aliexpress", "roblox",
-    "discord", "github", "gitlab", "stripe", "usps", "irs"
+    "discord", "github", "gitlab", "stripe", "usps", "irs",
+    # Premier Secured Brands & Financial Platforms
+    "oracle", "icicibank", "shopify", "flipkart", "meesho", "myntra", "nykaa",
+    "paytm", "phonepe", "razorpay", "cred", "swiggy", "zomato",
+    "irctc", "sbi", "hdfcbank", "axisbank", "pnbindia", "canarabank",
+    "kotak", "indusind", "bankofbaroda", "fabindia"
 ]
+
+TWO_PART_TLDS = {
+    "co.in", "gov.in", "edu.in", "ac.in", "org.in", "net.in", "res.in",
+    "co.uk", "ac.uk", "gov.uk", "org.uk", "com.au", "net.au", "org.au",
+    "edu.au", "gov.au", "co.nz", "co.za", "co.jp", "ne.jp", "or.jp",
+    "com.br", "com.sg", "com.mx", "com.tr", "com.my"
+}
+
+VERIFIED_SECURED_BRANDS = {
+    'aajtak', 'abg', 'adidas', 'adobe', 'agoda', 'airbnb', 'airindia', 'ajio', 'akasaair', 'aliexpress',
+    'altbalaji', 'amazon', 'amd', 'apple', 'asos', 'atlassian', 'aupowerbank', 'axisbank', 'bankofbaroda',
+    'bankofindia', 'bata', 'bbc', 'bestbuy', 'bewakoof', 'bharatpe', 'biba', 'bigbasket', 'bing', 'bitbucket',
+    'blinkit', 'bloomberg', 'blusmart', 'boat-lifestyle', 'booking', 'bookmyshow', 'box', 'britannica',
+    'business-standard', 'byjus', 'canarabank', 'canva', 'careers360', 'cashfree', 'cisco', 'cleartrip',
+    'clivia', 'cnn', 'coursera', 'cowin', 'cred', 'croma', 'decathlon', 'dev', 'digilocker', 'digitalocean',
+    'discord', 'dominos', 'dropbox', 'duckduckgo', 'easemytrip', 'edx', 'emirates', 'epfindia', 'etsy',
+    'expedia', 'fabindia', 'facebook', 'fastrack', 'federalbank', 'figma', 'financialexpress', 'fireboltt',
+    'firstcry', 'flipkart', 'forbes', 'foundit', 'freecharge', 'gaana', 'geeksforgeeks', 'github', 'gitlab',
+    'glassdoor', 'goibibo', 'google', 'hdfcbank', 'hindustantimes', 'hm', 'hotstar', 'ibm', 'icicibank',
+    'idfcfirstbank', 'imdb', 'incometax', 'indeed', 'india', 'indianexpress', 'indiatimes', 'indiatoday',
+    'indigo', 'indusind', 'instagram', 'instamojo', 'intel', 'irctc', 'javatpoint', 'jiocinema', 'jiosaavn',
+    'jira', 'kfc', 'kotak', 'lenskart', 'linkedin', 'livemint', 'makemytrip', 'mamaearth', 'manyavar',
+    'mastercard', 'mcdonaldsindia', 'medium', 'meesho', 'microsoft', 'mobikwik', 'moneycontrol', 'myntra',
+    'naukri', 'ndtv', 'netflix', 'news18', 'nike', 'noise', 'notion', 'nvidia', 'nvsp', 'nykaa', 'nytimes',
+    'olacabs', 'oracle', 'oyorooms', 'parivahan', 'passportindia', 'paytm', 'paytminsider', 'pepperfry',
+    'phonepe', 'physicswallah', 'pinterest', 'pizzahut', 'pnbindia', 'primevideo', 'puma', 'purplle',
+    'quora', 'rakuten', 'rapido', 'razorpay', 'rblbank', 'redbus', 'reddit', 'reliancedigital', 'reuters',
+    'revolut', 'samsung', 'sbi', 'scaler', 'shein', 'shiksha', 'shopify', 'signal', 'simplilearn', 'skype',
+    'slack', 'snapdeal', 'sonyliv', 'souledstore', 'spicejet', 'spotify', 'stackexchange', 'stackoverflow',
+    'stripe', 'substack', 'swiggy', 'target', 'tatacliq', 'telegram', 'theguardian', 'thehindu', 'ticketmaster',
+    'titan', 'trello', 'tripadvisor', 'tumblr', 'tutorialspoint', 'twitch', 'twitter', 'uber', 'udemy',
+    'uidai', 'unacademy', 'underarmour', 'unionbankofindia', 'uniqlo', 'upgrad', 'urbanladder', 'vedantu',
+    'visa', 'vistara', 'voot', 'w3schools', 'walmart', 'whatsapp', 'wikihow', 'wikipedia', 'wise',
+    'woodlandworldwide', 'wordpress', 'wsj', 'wynk', 'x', 'yahoo', 'yatra', 'yesbank', 'youtube', 'zara',
+    'zee5', 'zeptonow', 'zomato', 'zoom'
+}
 
 HOMOGLYPH_MAP = {
     '0': 'o',
@@ -80,7 +121,11 @@ def extract_domain_parts(url: str):
             pass
 
     parts = hostname.split('.')
-    if len(parts) >= 2:
+    if len(parts) >= 3 and f"{parts[-2]}.{parts[-1]}" in TWO_PART_TLDS:
+        tld = f"{parts[-2]}.{parts[-1]}"
+        domain_name = parts[-3]
+        subdomains = parts[:-3]
+    elif len(parts) >= 2:
         tld = parts[-1]
         domain_name = parts[-2]
         subdomains = parts[:-2]
@@ -182,6 +227,9 @@ def analyze_typosquatting(url: str) -> dict:
 
     # 4. Levenshtein edit distance & character substitution on whole domain
     # e.g. "paypa1", "pypal", "micros0ft", "g00gle"
+    if domain in HIGH_VALUE_TARGETS or normalized_domain in HIGH_VALUE_TARGETS:
+        return result
+
     for brand in HIGH_VALUE_TARGETS:
         # Distance against raw domain
         dist_raw = levenshtein_distance(domain, brand)

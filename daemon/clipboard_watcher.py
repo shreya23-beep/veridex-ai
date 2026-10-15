@@ -54,7 +54,7 @@ class ClipboardInterceptor:
 
     def _notify_user(self, title: str, message: str):
         """Shows Windows notification or console alert."""
-        print(f"\n[ALERT NOTIFICATION] 🚨 {title}: {message}")
+        print(f"\n[ALERT NOTIFICATION] {title}: {message}")
         if HAS_NOTIFY:
             try:
                 toaster.show_toast(title, message, duration=5, threaded=True)

@@ -20,7 +20,7 @@ from daemon.clipboard_watcher import interceptor
 
 def main():
     print("=" * 65)
-    print("🛡️  VERIDEX AI — BACKGROUND CLIPBOARD INTERCEPTOR ACTIVE  🛡️")
+    print("VERIDEX AI — BACKGROUND CLIPBOARD INTERCEPTOR ACTIVE")
     print("=" * 65)
     print("Watching clipboard for copied links... (Press Ctrl+C to terminate)")
     interceptor.start()

@@ -21,7 +21,7 @@ def main():
     host = "127.0.0.1"
     url = f"http://{host}:{port}"
     print("=" * 65)
-    print("🛡️  VERIDEX AI — AUTONOMOUS ON-DEVICE SCAM PROTECTION ENGINE  🛡️")
+    print("VERIDEX AI — AUTONOMOUS ON-DEVICE SCAM PROTECTION ENGINE")
     print("=" * 65)
     print("Mode:         100% Private, Offline & Zero-Cloud Reliance")
     print("AI Backend:   ONNX Runtime (CPU Hardware Accelerated)")

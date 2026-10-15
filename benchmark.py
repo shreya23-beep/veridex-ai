@@ -31,7 +31,7 @@ BENCHMARK_URLS = [
 
 def run_performance_test(iterations: int = 200):
     print("=" * 65)
-    print("⚡ VERIDEX AI — ON-DEVICE HARDWARE INFERENCE BENCHMARK ⚡")
+    print("VERIDEX AI — ON-DEVICE HARDWARE INFERENCE BENCHMARK")
     print("=" * 65)
     print(f"Backend Engine:   {engine.model_type}")
     print(f"Total Iterations: {iterations}")

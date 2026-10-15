@@ -1,14 +1,22 @@
-// VeriDex AI - Frontend Reactive Controller
-
-let currentFeatures = null;
+// VeriDex AI - Frontend Reactive Controller (Crema Warm Minimalist Edition)
 
 // Tab Switching
 function switchTab(tabId) {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-selected', 'false');
+  });
   document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
   
-  event.currentTarget.classList.add('active');
-  document.getElementById(`tab-${tabId}`).classList.add('active');
+  if (event && event.currentTarget) {
+    event.currentTarget.classList.add('active');
+    event.currentTarget.setAttribute('aria-selected', 'true');
+  }
+
+  const targetTab = document.getElementById(`tab-${tabId}`);
+  if (targetTab) {
+    targetTab.classList.add('active');
+  }
 
   if (tabId === 'threat-vault') {
     loadVaultLogs();
@@ -17,12 +25,17 @@ function switchTab(tabId) {
 
 // Preset Loaders
 function loadSample(url) {
-  document.getElementById('urlInput').value = url;
-  scanUrl();
+  const input = document.getElementById('urlInput');
+  if (input) {
+    input.value = url;
+    scanUrl();
+  }
 }
 
 function loadNlpPreset(type) {
   const nlpInput = document.getElementById('nlpInput');
+  if (!nlpInput) return;
+
   if (type === 'urgency') {
     nlpInput.value = "URGENT SECURITY NOTICE: Your PayPal account has been temporarily suspended due to unauthorized access. You must act immediately within 24 hours to confirm your password, SSN, and verify your identity before your account is permanently deleted!";
   } else if (type === 'greed') {
@@ -37,15 +50,18 @@ function loadNlpPreset(type) {
 
 // URL Scanner
 async function scanUrl() {
-  const url = document.getElementById('urlInput').value.trim();
+  const input = document.getElementById('urlInput');
+  const url = input ? input.value.trim() : "";
   if (!url) {
     alert("Please enter a valid target URL.");
     return;
   }
 
   const btn = document.getElementById('btnScanUrl');
-  btn.innerText = "Scanning...";
-  btn.disabled = true;
+  if (btn) {
+    btn.innerText = "Analyzing On-Device...";
+    btn.disabled = true;
+  }
 
   try {
     const res = await fetch('/api/scan/url', {
@@ -60,35 +76,73 @@ async function scanUrl() {
     console.error("Scan error:", err);
     alert("Failed to communicate with on-device engine: " + err.message);
   } finally {
-    btn.innerText = "Scan On-Device";
-    btn.disabled = false;
+    if (btn) {
+      btn.innerText = "Verify On-Device";
+      btn.disabled = false;
+    }
   }
 }
 
 function renderUrlResult(data) {
   const container = document.getElementById('urlResultContainer');
+  if (!container) return;
   container.classList.remove('hidden');
 
   // Verdict Header
-  const banner = document.getElementById('verdictBanner');
-  const icon = document.getElementById('verdictIcon');
   const title = document.getElementById('verdictTitle');
   const sub = document.getElementById('verdictSub');
   const badgeLatency = document.getElementById('badgeLatency');
   const badgeEngine = document.getElementById('badgeEngine');
+  const badgeCategory = document.getElementById('badgeCategory');
 
-  badgeLatency.innerText = `${data.latency_ms} ms`;
-  badgeEngine.innerText = data.engine || "ONNX Runtime";
+  if (badgeLatency) badgeLatency.innerText = `${data.latency_ms} ms`;
+  if (badgeEngine) badgeEngine.innerText = data.engine || "ONNX Runtime";
 
-  title.innerText = data.verdict;
-  title.style.color = data.threat_color;
+  if (data.classification && badgeCategory) {
+    badgeCategory.innerText = data.classification.type_badge || "GENERAL_WEB";
+    if (data.is_threat) {
+      badgeCategory.style.borderColor = "var(--red-border)";
+      badgeCategory.style.color = "var(--red)";
+      badgeCategory.style.background = "var(--red-bg)";
+    } else {
+      badgeCategory.style.borderColor = "var(--green-border)";
+      badgeCategory.style.color = "var(--green)";
+      badgeCategory.style.background = "var(--green-bg)";
+    }
+  }
 
-  if (data.is_threat) {
-    icon.innerText = "🚨";
-    sub.innerText = "Threat identified by on-device intelligence. Contextual mitigation triggered.";
+  if (title) {
+    title.innerText = data.verdict;
+    title.style.color = data.threat_color;
+  }
+
+  if (sub) {
+    if (data.is_threat) {
+      sub.innerText = data.classification ? data.classification.description : "Threat identified by on-device intelligence. Contextual mitigation triggered.";
+    } else {
+      sub.innerText = data.classification ? data.classification.description : "URL passed all structural, homoglyph, and on-device ML inspections.";
+    }
+  }
+
+  // Legitimate Website Recommendation & Popup Modal
+  const replicaBox = document.getElementById('replicaRecommendationBox');
+  if (data.legitimate_website_suggestion) {
+    if (replicaBox) {
+      replicaBox.classList.remove('hidden');
+      const badge = document.getElementById('replicaBrandBadge');
+      if (badge) badge.innerText = data.legitimate_website_suggestion.spoofed_brand || "Verified Brand";
+      const warnText = document.getElementById('replicaWarningText');
+      if (warnText) warnText.innerText = data.legitimate_website_suggestion.warning_message || "The scanned link appears to be an unauthorized replica. Here is the verified official legal website:";
+      const safeLink = document.getElementById('replicaSafeLink');
+      if (safeLink) safeLink.href = data.legitimate_website_suggestion.official_url;
+      const domText = document.getElementById('replicaOfficialDomain');
+      if (domText) domText.innerText = `(${data.legitimate_website_suggestion.official_domain})`;
+    }
+    // Show pop up modal to redirect to official website
+    showReplicaModal(data.url, data.legitimate_website_suggestion);
   } else {
-    icon.innerText = "🛡️";
-    sub.innerText = "URL passed all structural, homoglyph, and on-device ML inspections.";
+    if (replicaBox) replicaBox.classList.add('hidden');
+    closeReplicaModal();
   }
 
   // Score Circle
@@ -96,97 +150,54 @@ function renderUrlResult(data) {
   const scoreText = document.getElementById('scoreText');
   const confidenceVal = document.getElementById('confidenceVal');
 
-  circle.style.borderColor = data.threat_color;
-  scoreText.innerText = `${data.risk_score}%`;
-  scoreText.style.color = data.threat_color;
-  confidenceVal.innerText = `${data.confidence}%`;
+  if (circle) circle.style.borderColor = data.threat_color;
+  if (scoreText) {
+    scoreText.innerText = `${data.risk_score}%`;
+    scoreText.style.color = data.threat_color;
+  }
+  if (confidenceVal) confidenceVal.innerText = `${data.confidence}%`;
 
   // Explainable AI (XAI)
   const xaiList = document.getElementById('xaiList');
-  xaiList.innerHTML = '';
-  
-  if (data.risk_factors && data.risk_factors.length > 0) {
-    data.risk_factors.forEach(factor => {
+  if (xaiList) {
+    xaiList.innerHTML = '';
+    
+    if (data.risk_factors && data.risk_factors.length > 0) {
+      data.risk_factors.forEach(factor => {
+        const li = document.createElement('li');
+        const isThreat = data.is_threat;
+        li.className = `xai-item ${isThreat ? 'danger' : 'safe'}`;
+        li.innerHTML = `<div>${factor}</div>`;
+        xaiList.appendChild(li);
+      });
+    } else {
       const li = document.createElement('li');
-      li.className = `xai-item ${data.is_threat ? 'danger' : 'safe'}`;
-      li.innerHTML = `<span>${data.is_threat ? '⚠️' : '✅'}</span> <div>${factor}</div>`;
+      li.className = 'xai-item safe';
+      li.innerHTML = `<div>No anomalies or threat cues detected. Normal web profile.</div>`;
       xaiList.appendChild(li);
-    });
-  } else {
-    const li = document.createElement('li');
-    li.className = 'xai-item safe';
-    li.innerHTML = '<span>✅</span> <div>No anomalies or threat cues detected.</div>';
-    xaiList.appendChild(li);
+    }
   }
 
-  // Feature Matrix
-  currentFeatures = data.features;
-  renderFeatureTable(data.features);
-}
-
-function toggleFeatures() {
-  const table = document.getElementById('featuresTableContainer');
-  const icon = document.getElementById('featuresToggleIcon');
-  if (table.classList.contains('hidden')) {
-    table.classList.remove('hidden');
-    icon.innerText = "▲";
-  } else {
-    table.classList.add('hidden');
-    icon.innerText = "▼";
-  }
-}
-
-function renderFeatureTable(features) {
-  const tbody = document.getElementById('featuresTableBody');
-  tbody.innerHTML = '';
-
-  if (!features) return;
-
-  const featureDescriptions = {
-    "url_length": "Overall URL character count",
-    "domain_length": "Length of hostname",
-    "path_length": "Depth of URL path directory",
-    "query_length": "Query string parameter payload length",
-    "subdomain_count": "Number of nested subdomains",
-    "entropy_domain": "Shannon entropy (detects DGA / algorithmic randomness)",
-    "entropy_path": "Path randomness indicator",
-    "count_digits_domain": "Numeric characters in domain",
-    "ratio_digits_domain": "Ratio of digits to domain length",
-    "count_hyphens_domain": "Hyphens in domain (common in spoofing)",
-    "count_dots_url": "Dot count in entire URL",
-    "count_special_chars": "Special obfuscation characters (@, ?, =, %, etc.)",
-    "has_at_symbol": "Credential delimiter obfuscation symbol (@)",
-    "has_double_slash": "Internal redirect indicator (// in path)",
-    "has_ip_address": "Raw IP host bypassing registered DNS",
-    "is_https": "TLS/SSL transport encryption flag",
-    "is_suspicious_tld": "High-risk spam top-level domain flag",
-    "suspicious_keyword_count": "Count of phishing cues (login, verify, secure, etc.)",
-    "typosquat_score": "Confidence score from brand homoglyph analyzer",
-    "is_punycode": "IDN homograph attack indicator (xn--)"
-  };
-
-  for (const [key, val] of Object.entries(features)) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${key}</strong></td>
-      <td>${val}</td>
-      <td style="color: #94a3b8;">${featureDescriptions[key] || "Structural feature"}</td>
-    `;
-    tbody.appendChild(tr);
+  // Smooth scroll into results on mobile
+  if (window.innerWidth <= 768) {
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
 
 // NLP Scanner
 async function scanNlp() {
-  const text = document.getElementById('nlpInput').value.trim();
+  const input = document.getElementById('nlpInput');
+  const text = input ? input.value.trim() : "";
   if (!text) {
     alert("Please paste text content to analyze.");
     return;
   }
 
   const btn = document.getElementById('btnScanNlp');
-  btn.innerText = "Analyzing...";
-  btn.disabled = true;
+  if (btn) {
+    btn.innerText = "Analyzing Text...";
+    btn.disabled = true;
+  }
 
   try {
     const res = await fetch('/api/scan/text', {
@@ -200,13 +211,16 @@ async function scanNlp() {
     console.error("NLP error:", err);
     alert("NLP Analysis failed: " + err.message);
   } finally {
-    btn.innerText = "Analyze Manipulation";
-    btn.disabled = false;
+    if (btn) {
+      btn.innerText = "Analyze Text Cues";
+      btn.disabled = false;
+    }
   }
 }
 
 function renderNlpResult(data) {
   const container = document.getElementById('nlpResultContainer');
+  if (!container) return;
   container.classList.remove('hidden');
 
   const badge = document.getElementById('nlpThreatBadge');
@@ -214,56 +228,62 @@ function renderNlpResult(data) {
   const latency = document.getElementById('nlpLatency');
   const cuesGrid = document.getElementById('cuesGrid');
 
-  badge.innerText = `${data.threat_level} (${data.risk_score}%)`;
-  if (data.threat_level === 'CRITICAL') {
-    badge.style.background = 'rgba(239, 68, 68, 0.2)';
-    badge.style.color = '#ef4444';
-    badge.style.borderColor = '#ef4444';
-  } else if (data.threat_level === 'SUSPICIOUS') {
-    badge.style.background = 'rgba(245, 158, 11, 0.2)';
-    badge.style.color = '#f59e0b';
-    badge.style.borderColor = '#f59e0b';
-  } else {
-    badge.style.background = 'rgba(34, 197, 94, 0.2)';
-    badge.style.color = '#22c55e';
-    badge.style.borderColor = '#22c55e';
+  if (badge) {
+    badge.innerText = `${data.threat_level} (${data.risk_score}%)`;
+    if (data.threat_level === 'CRITICAL') {
+      badge.style.background = 'var(--red-bg)';
+      badge.style.color = 'var(--red)';
+      badge.style.borderColor = 'var(--red-border)';
+    } else if (data.threat_level === 'SUSPICIOUS') {
+      badge.style.background = 'var(--amber-bg)';
+      badge.style.color = 'var(--amber)';
+      badge.style.borderColor = 'var(--amber-border)';
+    } else {
+      badge.style.background = 'var(--green-bg)';
+      badge.style.color = 'var(--green)';
+      badge.style.borderColor = 'var(--green-border)';
+    }
   }
 
-  summary.innerText = data.summary;
-  latency.innerText = `${data.latency_ms} ms`;
+  if (summary) summary.innerText = data.summary;
+  if (latency) latency.innerText = `${data.latency_ms} ms`;
 
-  cuesGrid.innerHTML = '';
-  if (data.detected_cues && data.detected_cues.length > 0) {
-    data.detected_cues.forEach(cue => {
-      const card = document.createElement('div');
-      card.className = 'cue-card';
-      const tokenPills = cue.matched_tokens.map(t => `<span class="token-pill">${t}</span>`).join(' ');
-      card.innerHTML = `
-        <h5>${cue.category.replace(/_/g, ' ')} <span>+${cue.category_risk}%</span></h5>
-        <p>${cue.description}</p>
-        <div class="cue-tokens">${tokenPills}</div>
+  if (cuesGrid) {
+    cuesGrid.innerHTML = '';
+    if (data.detected_cues && data.detected_cues.length > 0) {
+      data.detected_cues.forEach(cue => {
+        const card = document.createElement('div');
+        card.className = 'cue-card';
+        const tokenPills = cue.matched_tokens.map(t => `<span class="token-pill">${t}</span>`).join(' ');
+        card.innerHTML = `
+          <h5>${cue.category.replace(/_/g, ' ')} <span>+${cue.category_risk}%</span></h5>
+          <p>${cue.description}</p>
+          <div class="cue-tokens">${tokenPills}</div>
+        `;
+        cuesGrid.appendChild(card);
+      });
+    } else {
+      cuesGrid.innerHTML = `
+        <div class="cue-card" style="grid-column: 1 / -1;">
+          <h5 style="color: var(--green);">No Manipulation Cues Detected</h5>
+          <p>Text appears neutral and does not use artificial urgency pressure, fear intimidation, or credential harvesting phrases.</p>
+        </div>
       `;
-      cuesGrid.appendChild(card);
-    });
-  } else {
-    cuesGrid.innerHTML = `
-      <div class="cue-card" style="grid-column: 1 / -1;">
-        <h5 style="color: #22c55e;">No Manipulation Cues Detected</h5>
-        <p>Text appears neutral and does not use artificial urgency, fear intimidation, or credential harvesting phrases.</p>
-      </div>
-    `;
+    }
   }
 }
 
 // Vault Logs
 async function loadVaultLogs() {
   const tbody = document.getElementById('vaultTableBody');
+  if (!tbody) return;
+
   try {
     const res = await fetch('/api/vault/logs?limit=50');
     const logs = await res.json();
     
     if (!logs || logs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 25px;">Vault is clean. No threats recorded.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="table-loading-cell">Vault is clean. No threats recorded yet.</td></tr>`;
       return;
     }
 
@@ -271,13 +291,16 @@ async function loadVaultLogs() {
     logs.forEach(log => {
       const tr = document.createElement('tr');
       const isThreat = log.is_threat;
-      const tagColor = isThreat ? '#ef4444' : '#22c55e';
+      const tagColor = isThreat ? 'var(--red)' : 'var(--green)';
+      const tagBg = isThreat ? 'var(--red-bg)' : 'var(--green-bg)';
+      const tagBorder = isThreat ? 'var(--red-border)' : 'var(--green-border)';
+
       tr.innerHTML = `
-        <td style="font-family: var(--font-mono); color: #94a3b8;">${log.timestamp}</td>
+        <td style="font-family: var(--font-mono); color: var(--text-muted); font-size: 11.5px;">${log.timestamp}</td>
         <td class="url-cell" title="${log.url}">${log.url}</td>
-        <td style="color: ${tagColor}; font-weight: 700;">${log.verdict}</td>
+        <td><span class="sample-tag" style="background: ${tagBg}; color: ${tagColor}; border-color: ${tagBorder}; font-weight: 600;">${log.verdict}</span></td>
         <td style="font-family: var(--font-mono); font-weight: 600;">${log.risk_score}%</td>
-        <td style="font-family: var(--font-mono); color: #38bdf8;">${log.latency_ms} ms</td>
+        <td style="font-family: var(--font-mono); color: var(--brand);">${log.latency_ms} ms</td>
         <td><span class="sample-tag">${log.source}</span></td>
       `;
       tbody.appendChild(tr);
@@ -304,10 +327,14 @@ async function loadStats() {
   try {
     const res = await fetch('/api/vault/stats');
     const data = await res.json();
-    document.getElementById('metricTotalScans').innerText = data.total_scans;
-    document.getElementById('metricThreatsBlocked').innerText = data.threats_blocked;
-    document.getElementById('metricTyposquats').innerText = data.typosquats_detected;
-    document.getElementById('metricAvgLatency').innerText = `${data.avg_latency_ms} ms`;
+    const setElem = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = val;
+    };
+    setElem('metricTotalScans', data.total_scans);
+    setElem('metricThreatsBlocked', data.threats_blocked);
+    setElem('metricTyposquats', data.typosquats_detected);
+    setElem('metricAvgLatency', `${data.avg_latency_ms} ms`);
   } catch (err) {
     console.error("Stats load error:", err);
   }
@@ -316,37 +343,190 @@ async function loadStats() {
 // Latency Benchmark
 async function runBenchmark() {
   const btn = document.getElementById('btnBench');
-  btn.innerText = "Running Stress Test...";
-  btn.disabled = true;
+  if (btn) {
+    btn.innerText = "Running Stress Test...";
+    btn.disabled = true;
+  }
 
   try {
     const res = await fetch('/api/benchmark');
     const data = await res.json();
     
-    document.getElementById('benchResults').classList.remove('hidden');
-    document.getElementById('benchAvg').innerText = `${data.avg_latency_ms} ms`;
-    document.getElementById('benchMin').innerText = `${data.min_latency_ms} ms`;
-    document.getElementById('benchP95').innerText = `${data.p95_latency_ms} ms`;
-    document.getElementById('benchEngine').innerText = data.engine;
+    const results = document.getElementById('benchResults');
+    if (results) results.classList.remove('hidden');
+
+    const setElem = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = val;
+    };
+    setElem('benchAvg', `${data.avg_latency_ms} ms`);
+    setElem('benchMin', `${data.min_latency_ms} ms`);
+    setElem('benchP95', `${data.p95_latency_ms} ms`);
+    setElem('benchEngine', data.engine);
   } catch (err) {
     alert("Benchmark failed: " + err.message);
   } finally {
-    btn.innerText = "Run Latency Stress Test";
-    btn.disabled = false;
+    if (btn) {
+      btn.innerText = "Run Latency Stress Test";
+      btn.disabled = false;
+    }
   }
 }
 
-// Clipboard Interceptor Switch
-document.getElementById('clipboardToggle').addEventListener('change', async (e) => {
-  const active = e.target.checked;
-  try {
-    await fetch(`/api/interceptor/toggle?enable=${active}`, { method: 'POST' });
-  } catch (err) {
-    console.error("Toggle error:", err);
+// CSV Batch Scam Scanning & Model Retraining
+async function runCsvBatchScan() {
+  const btn = document.getElementById('btnRunCsvScan');
+  if (btn) {
+    btn.innerText = "Scanning CSV on CPU...";
+    btn.disabled = true;
   }
+
+  try {
+    const res = await fetch('/api/scan/csv', { method: 'POST' });
+    const data = await res.json();
+
+    const strip = document.getElementById('csvSummaryStrip');
+    if (strip) strip.classList.remove('hidden');
+
+    const setElem = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = val;
+    };
+    setElem('csvTotalRows', data.total_scanned);
+    setElem('csvThreatsFound', data.threats_found);
+    setElem('csvSafeFound', data.safe_found);
+    setElem('csvThreatRatio', `${data.threat_ratio_percent}%`);
+
+    // Populate Table
+    const tbody = document.getElementById('csvTableBody');
+    if (tbody) {
+      tbody.innerHTML = '';
+
+      data.all_results.forEach(r => {
+        const tr = document.createElement('tr');
+        const isScam = r.is_scam;
+        const tagColor = isScam ? 'var(--red)' : 'var(--green)';
+        const badgeBg = isScam ? 'var(--red-bg)' : 'var(--green-bg)';
+        const badgeBorder = isScam ? 'var(--red-border)' : 'var(--green-border)';
+        const factorsText = r.risk_factors && r.risk_factors.length > 0 ? r.risk_factors.slice(0, 2).join('; ') : 'Normal web profile';
+
+        tr.innerHTML = `
+          <td style="color: var(--text-muted); font-family: var(--font-mono);">${r.row_index}</td>
+          <td class="url-cell" title="${r.url}">${r.url}</td>
+          <td><span class="sample-tag" style="background: ${badgeBg}; color: ${tagColor}; border-color: ${badgeBorder}; font-weight: 700;">${r.verdict}</span></td>
+          <td style="font-family: var(--font-mono); font-weight: 600;">${r.risk_score}%</td>
+          <td><span class="sample-tag">${r.type_badge}</span></td>
+          <td style="font-size: 12px; color: var(--text-muted); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${factorsText}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    loadStats();
+  } catch (err) {
+    alert("CSV Scan failed: " + err.message);
+  } finally {
+    if (btn) {
+      btn.innerText = "Scan All URLs in CSV";
+      btn.disabled = false;
+    }
+  }
+}
+
+async function retrainModelFromCsv() {
+  const btn = document.getElementById('btnRetrainCsv');
+  if (btn) {
+    btn.innerText = "Training Model from CSV...";
+    btn.disabled = true;
+  }
+
+  try {
+    const res = await fetch('/api/model/retrain', { method: 'POST' });
+    const data = await res.json();
+
+    const alertBox = document.getElementById('retrainAlertBox');
+    if (alertBox) alertBox.classList.remove('hidden');
+
+    const msg = document.getElementById('retrainMessage');
+    if (msg) msg.innerText = data.message;
+
+    const metricsBox = document.getElementById('retrainMetricsGrid');
+    if (metricsBox && data.metrics) {
+      const m = data.metrics;
+      metricsBox.innerHTML = `
+        <div class="badge-chip" style="color: var(--green);">Accuracy: ${m.accuracy}%</div>
+        <div class="badge-chip" style="color: var(--blue);">Precision: ${m.precision}%</div>
+        <div class="badge-chip" style="color: var(--brand);">Recall: ${m.recall}%</div>
+        <div class="badge-chip" style="color: var(--amber);">F1 Score: ${m.f1_score}%</div>
+        <div class="badge-chip">Rows: ${m.total_training_samples}</div>
+        <div class="badge-chip">Features: ${m.features_count}</div>
+      `;
+    }
+
+    loadStats();
+    alert("Model successfully retrained from data/veridex_dataset.csv and compiled into ONNX runtime format.");
+  } catch (err) {
+    alert("Retraining failed: " + err.message);
+  } finally {
+    if (btn) {
+      btn.innerText = "Retrain Model from CSV";
+      btn.disabled = false;
+    }
+  }
+}
+
+function exportCsvResults() {
+  window.open('/api/scan/csv', '_blank');
+}
+
+// Popup Modal: Redirect to Official Website of Replica Scam Website
+function showReplicaModal(scannedUrl, suggestion) {
+  const modal = document.getElementById('replicaRedirectModal');
+  if (!modal || !suggestion) return;
+
+  const brandBadge = document.getElementById('modalBrandBadge');
+  const title = document.getElementById('modalTitle');
+  const desc = document.getElementById('modalDesc');
+  const scannedEl = document.getElementById('modalScannedUrl');
+  const officialEl = document.getElementById('modalOfficialDomain');
+  const redirectBtn = document.getElementById('modalRedirectLink');
+
+  const brandName = suggestion.spoofed_brand || "Verified Brand";
+  const officialDomain = suggestion.official_domain || "";
+  const legalEntity = suggestion.legal_entity ? ` (${suggestion.legal_entity})` : "";
+  const officialUrl = suggestion.official_url || "#";
+
+  if (brandBadge) brandBadge.innerText = brandName;
+  if (title) title.innerText = `Unauthorized ${brandName} Replica Alert`;
+  if (desc) desc.innerText = suggestion.warning_message || `The scanned link appears to be an unauthorized replica impersonating ${brandName}. Never enter credentials, passwords, or personal data on this site.`;
+  if (scannedEl) scannedEl.innerText = scannedUrl || "-";
+  if (officialEl) officialEl.innerText = `${officialDomain}${legalEntity}`;
+  if (redirectBtn) {
+    redirectBtn.href = officialUrl;
+    const btnSpan = redirectBtn.querySelector('span');
+    if (btnSpan) btnSpan.innerText = `Redirect to Official ${brandName} Website`;
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeReplicaModal() {
+  const modal = document.getElementById('replicaRedirectModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+// Global modal dismiss listeners (Escape key & backdrop click)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeReplicaModal();
 });
 
 // Initialization
 window.addEventListener('DOMContentLoaded', () => {
   loadStats();
+  const modalEl = document.getElementById('replicaRedirectModal');
+  if (modalEl) {
+    modalEl.addEventListener('click', (e) => {
+      if (e.target === modalEl) closeReplicaModal();
+    });
+  }
 });

@@ -1,4 +1,4 @@
-# 🛡️ VeriDex AI: Autonomous On-Device Scam Protection
+# VeriDex AI: Autonomous On-Device Scam Protection
 
 > **100% Private, Offline & Zero-Cloud Reliance**  
 > Developed for the **BGSIT Hackathon** — *Theme: Digital Safety and Cybersecurity*  
@@ -6,7 +6,7 @@
 
 ---
 
-## 📌 Problem Statement Alignment
+## Problem Statement Alignment
 Modern users, especially non-technical users, face phishing, typosquatting, and AI-generated social engineering attacks. Existing security solutions suffer from severe drawbacks:
 - **Reactive Cloud Blacklists:** Static lists miss newly registered AI-generated scam domains.
 - **Privacy Violations:** Cloud extensions transmit users' raw browsing URLs to centralized servers.
@@ -16,7 +16,7 @@ Modern users, especially non-technical users, face phishing, typosquatting, and 
 
 ---
 
-## 🏗️ Technical Architecture & Stack Mapping
+## Technical Architecture & Stack Mapping
 
 ```
                                 [ User Browsing / Clipboard / Email ]
@@ -30,13 +30,14 @@ Modern users, especially non-technical users, face phishing, typosquatting, and 
 │     • Zero-Cloud REST API (`api/server.py` on localhost:8484)                          │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  2. FEATURE EXTRACTION & NLP ANALYSIS                                                  │
-│     • 20 Lexical, Structural & Entropy Dimensions (`core/feature_extractor.py`)        │
+│     • 26 Universal Lexical, Structural & Entropy Dimensions (`core/feature_extractor.py`)│
+│     • Intent Categorization: Blogs, .edu, Downloads, Generic Phishing, Spoofing       │
 │     • Brand Permutation & Homoglyph Engine (`core/typosquat_detector.py`)              │
 │     • Manipulation Cue Parser: Urgency, Fear, Greed (`core/nlp_analyzer.py`)           │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  3. ON-DEVICE MACHINE LEARNING INFERENCE                                               │
 │     • ONNX Runtime CPU Hardware Acceleration (`core/ml_engine.py`)                     │
-│     • Model: Quantized Random Forest in `models/veridex_model.onnx` (< 25 KB)          │
+│     • Universal Random Forest ONNX model in `models/veridex_model.onnx` (34.9 KB)      │
 │     • Sub-millisecond Execution Latency (< 1 ms per URL)                               │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  4. LOCAL PRIVACY & DATA SECURITY                                                      │
@@ -55,7 +56,7 @@ Modern users, especially non-technical users, face phishing, typosquatting, and 
 
 ---
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
 ### 1. Launch the Interactive Web Cyber-Defense Dashboard
 Runs the local API server and automatically opens the interactive dashboard in your browser:
@@ -70,13 +71,19 @@ Starts the dark-slate desktop app with real-time clipboard monitoring and toast 
 python run_desktop_app.py
 ```
 
-### 3. Run Real-Time Hardware Benchmark
+### 3. Run Batch Scam Detection from CSV Dataset
+Reads the 26-feature dataset from `data/veridex_dataset.csv`, scans all rows on-device, and outputs `veridex_scam_detection_results.csv`:
+```bash
+python run_csv_scan.py
+```
+
+### 4. Run Real-Time Hardware Benchmark
 Tests 200 on-device inferences and computes min, p50, and p95 latency percentiles:
 ```bash
 python benchmark.py
 ```
 
-### 4. Run the Automated Test Suite
+### 5. Run the Automated Test Suite
 Executes unit tests covering ONNX inference, typosquatting, NLP, and encrypted vault operations:
 ```bash
 python -m unittest tests/test_engine.py
@@ -84,7 +91,7 @@ python -m unittest tests/test_engine.py
 
 ---
 
-## 🔬 Core Capabilities
+## Core Capabilities
 
 ### 1. Brand Impersonation & Typosquatting Detection
 - Targets 40+ high-value brands (PayPal, Apple, Google, Chase, Binance, Steam, etc.).
@@ -106,3 +113,8 @@ python -m unittest tests/test_engine.py
 - Cryptographic keys are protected using Windows DPAPI (`win32crypt.CryptProtectData`).
 - URLs and forensic logs are encrypted at rest with AES-256 in `data/veridex_vault.db`.
 - No browsing history or metadata is ever transmitted over the network.
+
+### 5. Authentic Legal Website Recommendation Advisor
+- Detects when a phishing/replica URL targets an established organization (e.g. PayPal, Apple, Chase, Google, Microsoft, Amazon, Netflix, Steam, Binance).
+- Automatically suggests the authentic legal website (e.g., `https://www.paypal.com`), displays the verified domain, and offers a safe one-click navigation link.
+- Fully supported across the **Web Cyber Dashboard**, **Native Windows App**, and **CSV Batch Scanner Export**.

@@ -19,38 +19,38 @@ MANIPULATION_CATEGORIES = {
         "description": "Artificial urgency designed to panic the victim into bypassing critical thinking."
     },
     "FEAR_AND_PENALTY": {
-        "weight": 0.25,
+        "weight": 0.30,
         "patterns": [
-            r"\b(account (suspended|frozen|locked|restricted|compromised)|unauthorized access|security breach)\b",
-            r"\b(fraudulent activity|legal action|law enforcement|police|court summons|arrest warrant|fine)\b",
-            r"\b(penalty|financial loss|security alert|suspicious sign-in|identity theft)\b"
+            r"\b(account\s+(?:is\s+|has\s+been\s+|was\s+|will\s+be\s+)?(?:suspended|frozen|locked|restricted|compromised|terminated)|unauthorized\s+access|security\s+breach)\b",
+            r"\b(fraudulent\s+activity|legal\s+(?:action|arrest|notice)|law\s+enforcement|police|court\s+summons|arrest\s*(?:warrant)?|penalt(?:y|ies)|fine)\b",
+            r"\b(financial\s+loss|security\s+alert|suspicious\s+sign-in|identity\s+theft)\b"
         ],
         "description": "Fear and intimidation tactic threatening financial loss, legal penalties, or account loss."
     },
     "FINANCIAL_GREED_AND_PRIZES": {
-        "weight": 0.20,
+        "weight": 0.25,
         "patterns": [
-            r"\b(congratulations|winner|you have won|lottery|crypto airdrop|free (gift|money|bitcoin|usdt|tokens))\b",
+            r"\b(congratulations|winner|you have won|lottery|crypto airdrop|free\s+(?:gift|money|bitcoin|usdt|tokens))\b",
             r"\b(exclusive reward|claim your prize|payout|unclaimed funds|double your investment|cash bonus)\b",
             r"\b(100% guaranteed return|risk-free profits|instant transfer)\b"
         ],
         "description": "Lures offering unrealistic monetary rewards, lotteries, or cryptocurrency airdrops."
     },
     "CREDENTIAL_HARVESTING": {
-        "weight": 0.30,
+        "weight": 0.35,
         "patterns": [
-            r"\b(enter (your )?password|confirm (your )?pin|verify (your )?identity|provide ssn|social security)\b",
-            r"\b(credit card number|cvv|expiration date|banking credentials|seed phrase|private key|recovery phrase)\b",
-            r"\b(one-time password|otp|authenticator code|2fa code|login credentials)\b"
+            r"\b(enter\s+(?:your\s+)?password|confirm\s+(?:your\s+)?pin|verify\s+(?:your\s+)?identity|provide\s+ssn|social\s+security)\b",
+            r"\b(credit\s+card\s+number|cvv|expiration\s+date|banking\s+credentials|seed\s+phrase|private\s+key|recovery\s+phrase)\b",
+            r"\b(one-time\s+password|otp|authenticator\s+code|2fa\s+code|login\s+credentials)\b"
         ],
         "description": "Direct attempts to harvest sensitive credentials, banking details, or crypto keys."
     },
     "FALSE_TECH_SUPPORT": {
-        "weight": 0.20,
+        "weight": 0.25,
         "patterns": [
-            r"\b(virus detected|trojan found|firewall breached|call toll-free|call support|helpdesk helpline)\b",
-            r"\b(certified technician|download anydesk|install teamviewer|allow remote access|fix your pc)\b",
-            r"\b(microsoft support alert|windows defender warning)\b"
+            r"\b(virus\s+detected|trojan\s+found|firewall\s+breached|call\s+toll-free|call\s+support|helpdesk\s+helpline)\b",
+            r"\b(certified\s+technician|download\s+anydesk|install\s+teamviewer|allow\s+remote\s+access|fix\s+your\s+pc)\b",
+            r"\b(microsoft\s+support\s+alert|windows\s+defender\s+warning)\b"
         ],
         "description": "Impersonation of technical support urging installation of remote administration tools."
     }
@@ -106,7 +106,7 @@ class ManipulationCueAnalyzer:
                 cue_weight = category_meta["weight"]
                 
                 # Diminishing returns on repeated hits in same category
-                hit_severity = min(len(matches) * 0.4, 1.0)
+                hit_severity = min(len(matches) * 0.5, 1.0)
                 category_score = cue_weight * hit_severity
                 total_risk_score += category_score
 
@@ -117,6 +117,12 @@ class ManipulationCueAnalyzer:
                     "hit_count": len(matches),
                     "category_risk": round(category_score * 100, 1)
                 })
+
+        # Multi-vector synergy: combinations of urgency, fear, and credential harvesting are high-confidence attacks
+        if len(detected_cues) >= 3:
+            total_risk_score += 0.25
+        elif len(detected_cues) >= 2:
+            total_risk_score += 0.15
 
         normalized_score = min(round(total_risk_score * 100, 1), 100.0)
 

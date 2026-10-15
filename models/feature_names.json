@@ -16,7 +16,13 @@
   "has_ip_address",
   "is_https",
   "is_suspicious_tld",
-  "suspicious_keyword_count",
+  "is_trusted_tld",
+  "auth_keyword_count",
+  "scam_keyword_count",
   "typosquat_score",
-  "is_punycode"
+  "is_punycode",
+  "is_url_shortener",
+  "has_executable_payload",
+  "is_free_hosting_or_tunnel",
+  "has_non_standard_port"
 ]

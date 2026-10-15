@@ -33,6 +33,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_no_cache_headers(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static") or request.url.path == "/":
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 # Request Models
 class URLScanRequest(BaseModel):
     url: str
@@ -173,6 +182,42 @@ def run_benchmark():
         "p95_latency_ms": round(sorted(latencies)[int(len(latencies) * 0.95)], 3),
         "engine": engine.model_type
     }
+
+# CSV Dataset & Batch Scam Scanning Endpoints
+@app.post("/api/scan/csv")
+def scan_csv_endpoint(custom_path: Optional[str] = None):
+    from core.csv_detector import scan_csv_dataset, DEFAULT_CSV_PATH
+    path = custom_path if (custom_path and os.path.exists(custom_path)) else DEFAULT_CSV_PATH
+    summary = scan_csv_dataset(csv_path=path, save_output=True)
+    return summary
+
+@app.post("/api/model/retrain")
+def retrain_model_endpoint(custom_path: Optional[str] = None):
+    from core.trainer import train_and_export_model, DEFAULT_DATASET_CSV
+    path = custom_path if (custom_path and os.path.exists(custom_path)) else DEFAULT_DATASET_CSV
+    metrics = train_and_export_model(csv_path=path)
+    # Hot-reload ONNX model in engine
+    engine._load_model()
+    return {
+        "status": "SUCCESS",
+        "message": f"Random Forest & ONNX engine successfully retrained from {os.path.basename(path)}!",
+        "metrics": metrics
+    }
+
+@app.get("/api/dataset/preview")
+def dataset_preview(limit: int = 25):
+    from core.csv_detector import DEFAULT_CSV_PATH
+    import csv
+    if not os.path.exists(DEFAULT_CSV_PATH):
+        return {"rows": []}
+    rows = []
+    with open(DEFAULT_CSV_PATH, mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for idx, r in enumerate(reader):
+            if idx >= limit:
+                break
+            rows.append(r)
+    return {"rows": rows, "total_preview": len(rows), "file": os.path.basename(DEFAULT_CSV_PATH)}
 
 # Static Dashboard Files Mount
 UI_STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ui", "web")

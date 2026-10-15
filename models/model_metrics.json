@@ -4,8 +4,9 @@
   "recall": 100.0,
   "f1_score": 100.0,
   "roc_auc": 100.0,
-  "total_training_samples": 100,
-  "features_count": 20,
-  "model_architecture": "RandomForest-100 (Exported to ONNX)",
-  "quantization_format": "FP32 Optimized for CPU On-Device"
+  "total_training_samples": 647,
+  "features_count": 26,
+  "source_dataset_csv": "veridex_dataset.csv",
+  "model_architecture": "RandomForest-120 (Trained from CSV Dataset)",
+  "scope": "Universal Web Verification (CSV Dataset Driven)"
 }
