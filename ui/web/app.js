@@ -1,5 +1,9 @@
 // VeriDex AI - Frontend Reactive Controller (Crema Warm Minimalist Edition)
 
+// Base API configuration: Automatically supports relative routing (Vercel rewrites & Render deployment)
+// or an explicit backend URL if configured on window.VERIDEX_API_BASE
+const API_BASE = (window.VERIDEX_API_BASE || '').replace(/\/+$/, '');
+
 // Tab Switching
 function switchTab(tabId) {
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -64,7 +68,7 @@ async function scanUrl() {
   }
 
   try {
-    const res = await fetch('/api/scan/url', {
+    const res = await fetch(`${API_BASE}/api/scan/url`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: url, source: 'WEB_DASHBOARD' })
@@ -200,7 +204,7 @@ async function scanNlp() {
   }
 
   try {
-    const res = await fetch('/api/scan/text', {
+    const res = await fetch(`${API_BASE}/api/scan/text`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text })
@@ -279,7 +283,7 @@ async function loadVaultLogs() {
   if (!tbody) return;
 
   try {
-    const res = await fetch('/api/vault/logs?limit=50');
+    const res = await fetch(`${API_BASE}/api/vault/logs?limit=50`);
     const logs = await res.json();
     
     if (!logs || logs.length === 0) {
@@ -312,20 +316,20 @@ async function loadVaultLogs() {
 
 async function clearVault() {
   if (confirm("Are you sure you want to clear the encrypted local threat vault?")) {
-    await fetch('/api/vault/clear', { method: 'POST' });
+    await fetch(`${API_BASE}/api/vault/clear`, { method: 'POST' });
     loadVaultLogs();
     loadStats();
   }
 }
 
 function exportVaultReport() {
-  window.open('/api/vault/logs?limit=500', '_blank');
+  window.open(`${API_BASE}/api/vault/logs?limit=500`, '_blank');
 }
 
 // Stats Poller
 async function loadStats() {
   try {
-    const res = await fetch('/api/vault/stats');
+    const res = await fetch(`${API_BASE}/api/vault/stats`);
     const data = await res.json();
     const setElem = (id, val) => {
       const el = document.getElementById(id);
@@ -349,7 +353,7 @@ async function runBenchmark() {
   }
 
   try {
-    const res = await fetch('/api/benchmark');
+    const res = await fetch(`${API_BASE}/api/benchmark`);
     const data = await res.json();
     
     const results = document.getElementById('benchResults');
@@ -382,7 +386,7 @@ async function runCsvBatchScan() {
   }
 
   try {
-    const res = await fetch('/api/scan/csv', { method: 'POST' });
+    const res = await fetch(`${API_BASE}/api/scan/csv`, { method: 'POST' });
     const data = await res.json();
 
     const strip = document.getElementById('csvSummaryStrip');
@@ -441,7 +445,7 @@ async function retrainModelFromCsv() {
   }
 
   try {
-    const res = await fetch('/api/model/retrain', { method: 'POST' });
+    const res = await fetch(`${API_BASE}/api/model/retrain`, { method: 'POST' });
     const data = await res.json();
 
     const alertBox = document.getElementById('retrainAlertBox');
@@ -476,7 +480,7 @@ async function retrainModelFromCsv() {
 }
 
 function exportCsvResults() {
-  window.open('/api/scan/csv', '_blank');
+  window.open(`${API_BASE}/api/scan/csv`, '_blank');
 }
 
 // Popup Modal: Redirect to Official Website of Replica Scam Website
