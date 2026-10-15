@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeriDex AI — Autonomous On-Device Scam Protection</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- TOP NAVIGATION -->
+    <header class="top-nav">
+      <div class="nav-left">
+        <div class="brand-badge">
+          <div class="shield-pulse">🛡️</div>
+          <div class="brand-titles">
+            <h1>VERIDEX <span>AI</span></h1>
+            <p>Autonomous On-Device Scam Protection</p>
+          </div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <div class="status-pill status-offline">
+          <span class="dot"></span> 100% PRIVATE & ZERO-CLOUD
+        </div>
+        <div class="status-pill status-engine">
+          <span class="chip-icon">⚡</span> ONNX Runtime (CPU)
+        </div>
+        <div class="interceptor-switch">
+          <label class="switch-label">
+            <span class="switch-text">Clipboard Guard</span>
+            <input type="checkbox" id="clipboardToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </header>
+
+    <!-- METRICS STRIP -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon blue">🔍</div>
+        <div class="metric-info">
+          <div class="metric-val" id="metricTotalScans">0</div>
+          <div class="metric-label">Total Local Scans</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon red">🚨</div>
+        <div class="metric-info">
+          <div class="metric-val" id="metricThreatsBlocked">0</div>
+          <div class="metric-label">Threats Neutralized</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon purple">🎭</div>
+        <div class="metric-info">
+          <div class="metric-val" id="metricTyposquats">0</div>
+          <div class="metric-label">Typosquats Flagged</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon green">⚡</div>
+        <div class="metric-info">
+          <div class="metric-val" id="metricAvgLatency">< 0.5 ms</div>
+          <div class="metric-label">Avg On-Device Latency</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN APP TABS -->
+    <div class="tab-container">
+      <div class="tab-buttons">
+        <button class="tab-btn active" onclick="switchTab('url-scanner')">
+          <span>🌐</span> URL Radar & ML Inspector
+        </button>
+        <button class="tab-btn" onclick="switchTab('nlp-scanner')">
+          <span>🧠</span> NLP Manipulation Cues
+        </button>
+        <button class="tab-btn" onclick="switchTab('threat-vault')">
+          <span>🔐</span> Encrypted Vault & Audit
+        </button>
+        <button class="tab-btn" onclick="switchTab('architecture')">
+          <span>📊</span> Engine & Benchmark
+        </button>
+      </div>
+
+      <!-- TAB 1: URL SCANNER -->
+      <section id="tab-url-scanner" class="tab-content active">
+        <div class="scanner-hero">
+          <h2>Autonomous On-Device URL Inspector</h2>
+          <p>Scans lexical patterns, typosquatting permutations, and high-order feature entropy in under 2 milliseconds without transmitting any browsing data.</p>
+          
+          <div class="scan-input-box">
+            <span class="input-icon">🔗</span>
+            <input type="text" id="urlInput" placeholder="Enter target URL (e.g., http://paypa1-security-verification.com/login)..." />
+            <button class="btn-primary" id="btnScanUrl" onclick="scanUrl()">
+              <span>Scan On-Device</span>
+            </button>
+          </div>
+
+          <!-- Quick Test Samples -->
+          <div class="sample-pills">
+            <span class="sample-title">Preset Test Cases:</span>
+            <button class="sample-tag danger" onclick="loadSample('http://paypa1-security-verification.com/login')">
+              ⚠️ PayPal Typosquat
+            </button>
+            <button class="sample-tag danger" onclick="loadSample('http://chase-bank-customer-support-update.top/account/verify')">
+              ⚠️ Chase Phishing (.top)
+            </button>
+            <button class="sample-tag danger" onclick="loadSample('http://192.168.1.105/bankofamerica/secure-auth.html')">
+              ⚠️ Raw IP Attack
+            </button>
+            <button class="sample-tag danger" onclick="loadSample('http://binance-airdrop-free-tokens.buzz/claim?wallet=crypto')">
+              ⚠️ Crypto Greed Scam
+            </button>
+            <button class="sample-tag safe" onclick="loadSample('https://paypal.com/signin')">
+              ✅ Genuine PayPal
+            </button>
+            <button class="sample-tag safe" onclick="loadSample('https://github.com/torvalds/linux')">
+              ✅ Genuine GitHub
+            </button>
+          </div>
+        </div>
+
+        <!-- URL RESULT CONTAINER -->
+        <div id="urlResultContainer" class="result-container hidden">
+          <div class="result-header">
+            <div class="verdict-banner" id="verdictBanner">
+              <div class="verdict-status-icon" id="verdictIcon">🛡️</div>
+              <div>
+                <h3 id="verdictTitle">ANALYSIS READY</h3>
+                <p id="verdictSub">On-device ML multi-layer evaluation complete.</p>
+              </div>
+            </div>
+            <div class="speed-meta">
+              <div class="badge-chip" id="badgeLatency">0.24 ms</div>
+              <div class="badge-chip" id="badgeEngine">ONNX Runtime</div>
+            </div>
+          </div>
+
+          <div class="result-grid">
+            <!-- Left: Risk Gauge & Score -->
+            <div class="card result-card">
+              <h4>Threat Probability</h4>
+              <div class="score-display">
+                <div class="score-circle" id="scoreCircle">
+                  <span id="scoreText">0%</span>
+                  <small>RISK INDEX</small>
+                </div>
+              </div>
+              <div class="score-details">
+                <div class="detail-row">
+                  <span>Confidence:</span>
+                  <strong id="confidenceVal">100%</strong>
+                </div>
+                <div class="detail-row">
+                  <span>Privacy Mode:</span>
+                  <strong class="highlight-green">100% Zero-Cloud</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Explainable AI Breakdown -->
+            <div class="card result-card xai-card">
+              <h4>Explainable AI (XAI) Indicators</h4>
+              <p class="xai-sub">Contextual mitigation without alert fatigue:</p>
+              <ul class="xai-list" id="xaiList">
+                <!-- Injected via JS -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- Deep Feature Matrix (Collapsible) -->
+          <div class="card features-card">
+            <div class="accordion-header" onclick="toggleFeatures()">
+              <h4>📊 Extracted Feature Vector (20 Dimensions)</h4>
+              <span id="featuresToggleIcon">▼</span>
+            </div>
+            <div id="featuresTableContainer" class="features-table-wrap hidden">
+              <table class="features-table">
+                <thead>
+                  <tr>
+                    <th>Feature Name</th>
+                    <th>Value</th>
+                    <th>Security Context</th>
+                  </tr>
+                </thead>
+                <tbody id="featuresTableBody">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: NLP MANIPULATION CUES -->
+      <section id="tab-nlp-scanner" class="tab-content">
+        <div class="scanner-hero">
+          <h2>On-Device NLP Manipulation Cue Analyzer</h2>
+          <p>Identifies psychological persuasion techniques, artificial urgency, legal intimidation, and credential harvesting in message bodies without sending text to the cloud.</p>
+          
+          <div class="nlp-input-box">
+            <textarea id="nlpInput" rows="5" placeholder="Paste suspicious email, SMS text, or webpage prompt here..."></textarea>
+            <div class="nlp-btn-row">
+              <div class="sample-pills">
+                <span class="sample-title">Presets:</span>
+                <button class="sample-tag danger" onclick="loadNlpPreset('urgency')">⚠️ Urgency Extortion</button>
+                <button class="sample-tag danger" onclick="loadNlpPreset('greed')">⚠️ Crypto Airdrop</button>
+                <button class="sample-tag danger" onclick="loadNlpPreset('techsupport')">⚠️ Fake Tech Support</button>
+                <button class="sample-tag safe" onclick="loadNlpPreset('safe')">✅ Normal Message</button>
+              </div>
+              <button class="btn-primary" id="btnScanNlp" onclick="scanNlp()">
+                <span>Analyze Manipulation</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- NLP RESULT CONTAINER -->
+        <div id="nlpResultContainer" class="result-container hidden">
+          <div class="card nlp-result-card">
+            <div class="nlp-header">
+              <div class="nlp-badge" id="nlpThreatBadge">SUSPICIOUS</div>
+              <div class="nlp-summary" id="nlpSummaryText">Summary</div>
+              <div class="badge-chip" id="nlpLatency">0.15 ms</div>
+            </div>
+            <div class="cues-grid" id="cuesGrid">
+              <!-- Injected via JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: ENCRYPTED THREAT VAULT -->
+      <section id="tab-threat-vault" class="tab-content">
+        <div class="vault-hero">
+          <div class="vault-info">
+            <h2>Local Encrypted Threat Vault</h2>
+            <p>All blocked URLs and telemetry are stored in an encrypted local database protected by <strong>Windows DPAPI & AES-256</strong>. Zero browsing logs ever leave your machine.</p>
+          </div>
+          <div class="vault-actions">
+            <button class="btn-secondary" onclick="loadVaultLogs()">🔄 Refresh Vault</button>
+            <button class="btn-secondary" onclick="exportVaultReport()">📥 Export Forensics</button>
+            <button class="btn-danger" onclick="clearVault()">🗑️ Clear Audit</button>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <table class="vault-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Inspected URL (Decrypted Locally)</th>
+                <th>Verdict</th>
+                <th>Risk Index</th>
+                <th>Latency</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody id="vaultTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 25px;">Loading encrypted vault...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 4: ARCHITECTURE & BENCHMARK -->
+      <section id="tab-architecture" class="tab-content">
+        <div class="card arch-card">
+          <h2>Autonomous On-Device Architecture</h2>
+          <div class="arch-diagram">
+            <div class="arch-step">
+              <div class="step-icon">📋</div>
+              <h4>1. OS Interception</h4>
+              <p>Clipboard Watcher & Local API intercept URLs silently</p>
+            </div>
+            <div class="arch-arrow">➔</div>
+            <div class="arch-step">
+              <div class="step-icon">🔬</div>
+              <h4>2. Feature Engine</h4>
+              <p>20 Lexical, Typosquat, Entropy & Punycode Features</p>
+            </div>
+            <div class="arch-arrow">➔</div>
+            <div class="arch-step">
+              <div class="step-icon">⚡</div>
+              <h4>3. ONNX Runtime</h4>
+              <p>Local inference in &lt; 0.5ms with CPU acceleration</p>
+            </div>
+            <div class="arch-arrow">➔</div>
+            <div class="arch-step">
+              <div class="step-icon">🔐</div>
+              <h4>4. DPAPI Vault</h4>
+              <p>Zero-cloud AES-256 encrypted local logging</p>
+            </div>
+          </div>
+
+          <div class="benchmark-box">
+            <div class="bench-header">
+              <div>
+                <h3>On-Device Latency Benchmark</h3>
+                <p>Run 50 live inference iterations on-device to verify real-time performance.</p>
+              </div>
+              <button class="btn-primary" id="btnBench" onclick="runBenchmark()">
+                <span>Run Latency Stress Test</span>
+              </button>
+            </div>
+            <div id="benchResults" class="bench-stats hidden">
+              <div class="bench-stat">
+                <span class="val" id="benchAvg">-</span>
+                <span class="lbl">Average Latency</span>
+              </div>
+              <div class="bench-stat">
+                <span class="val" id="benchMin">-</span>
+                <span class="lbl">Minimum Latency</span>
+              </div>
+              <div class="bench-stat">
+                <span class="val" id="benchP95">-</span>
+                <span class="lbl">p95 Latency</span>
+              </div>
+              <div class="bench-stat">
+                <span class="val" id="benchEngine">-</span>
+                <span class="lbl">Execution Provider</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <p>VeriDex AI — Autonomous On-Device Scam Protection Engine &bull; BGSIT Hackathon 2026 &bull; Team: Shreya S, Shirali S, Shreya S, Sinchana M</p>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+[
+  "url_length",
+  "domain_length",
+  "path_length",
+  "query_length",
+  "subdomain_count",
+  "entropy_domain",
+  "entropy_path",
+  "count_digits_domain",
+  "ratio_digits_domain",
+  "count_hyphens_domain",
+  "count_dots_url",
+  "count_special_chars",
+  "has_at_symbol",
+  "has_double_slash",
+  "has_ip_address",
+  "is_https",
+  "is_suspicious_tld",
+  "suspicious_keyword_count",
+  "typosquat_score",
+  "is_punycode"
+]

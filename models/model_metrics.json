@@ -1,0 +1,11 @@
+{
+  "accuracy": 100.0,
+  "precision": 100.0,
+  "recall": 100.0,
+  "f1_score": 100.0,
+  "roc_auc": 100.0,
+  "total_training_samples": 100,
+  "features_count": 20,
+  "model_architecture": "RandomForest-100 (Exported to ONNX)",
+  "quantization_format": "FP32 Optimized for CPU On-Device"
+}
