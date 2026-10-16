@@ -1,8 +1,8 @@
 # VeriDex AI: Autonomous On-Device Scam Protection
 
 > **100% Private, Offline & Zero-Cloud Reliance**  
-> Developed for the **BGSIT Hackathon** — *Theme: Digital Safety and Cybersecurity*
-> **Team Name:** CryptX
+> Developed for the **BGSIT Hackathon** — *Theme: Digital Safety and Cybersecurity*                            
+> **Team Name:** CryptX                                  
 > **Team:** Shreya S, Shirali S, Shreya S, Sinchana M  
 
 ---
