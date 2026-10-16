@@ -121,3 +121,54 @@ python -m unittest tests/test_engine.py
 - Detects when a phishing/replica URL targets an established organization (e.g. PayPal, Apple, Chase, Google, Microsoft, Amazon, Netflix, Steam, Binance).
 - Automatically suggests the authentic legal website (e.g., `https://www.paypal.com`), displays the verified domain, and offers a safe one-click navigation link.
 - Fully supported across the **Web Cyber Dashboard**, **Native Windows App**, and **CSV Batch Scanner Export**.
+
+### System Architecture & Core Modules
+VeriDex AI is structured around a modular pipeline designed to extract features, analyze natural language, resolve brand spoofing, and evaluate malicious markers via machine learning.
+
+**core/feature_extractor.py:** Parses URLs, text blocks, and structured inputs to extract lexical, structural, and behavioral metrics.
+
+**core/nlp_analyzer.py:** Utilizes natural language processing pipelines to detect social engineering manipulation, urgency cues, and phishing intent.
+
+**core/brand_resolver.py:** Identifies targeted brand identities to spot lookalike or spoofed organizational domains.
+
+**core/typosquat_detector.py:** Employs string distance metrics and character permutation algorithms to catch typosquatted domain variations.
+
+**core/csv_detector.py:** Automates bulk evaluation pipelines for scanning tabular datasets and security logs.
+
+**core/ml_engine.py:** Manages model execution, handling both Joblib (veridex_model.joblib) and ONNX runtime formats (veridex_model.onnx) for high-performance classification.
+
+**core/trainer.py:** Handles dataset ingestion and model retraining workflows using tracked features and metrics (model_metrics.json).
+
+### Security & Vault Subsystem
+**security/crypto_vault.py:** Provides encryption routines and secure storage management backed by vault keys (.veridex_vault.key) and encrypted databases (veridex_vault.db).
+
+**security/threat_db.py:** Interfaces with localized threat intelligence repositories to cross-reference known phishing patterns, malicious hashes, and scam signatures.
+
+### Background Daemons & Execution Interfaces
+VeriDex AI supports multiple deployment modalities ranging from background automation to full web and desktop applications:
+
+**Clipboard Daemon (daemon/clipboard_watcher.py & run_daemon.py):** Continuously monitors system clipboard activity in the background to automatically screen copied URLs or suspicious text strings for threats.
+
+**Desktop App (ui/desktop_app.py & run_desktop_app.py):** A native graphical interface providing real-time threat scores and manual lookup utilities.
+
+**Web Dashboard (ui/web/ & run_web_dashboard.py):** A web-based control panel utilizing modern frontend assets (app.js, style.css, SVG/PNG logos) served via an API backend (api/server.py).
+
+**CLI & Batch Scanners:**
+
+**infer_veridex.py:** Command-line interface for single-instance scan predictions.
+
+**run_csv_scan.py:** Scripted utility for bulk processing of dataset rows (e.g., veridex_dataset.csv).
+
+### Deployment & Configuration
+The project includes pre-configured deployment manifests for various hosting and production environments:
+
+**Docker (Dockerfile, .dockerignore):** Containerized setup ensuring consistent runtime execution.
+
+**Vercel (vercel.json, api/index.py):** Serverless deployment configuration for the API layer.
+
+**Render (render.yaml, Procfile, runtime.txt):** Production blueprint specifying Python runtime versions (Python 3.11.9) and process management commands.
+
+### Testing & Benchmarking
+**benchmark.py:** Evaluates pipeline latency and classification throughput.
+
+**tests/test_engine.py:** Comprehensive test suite validating core feature extraction, model inference consistency, and security vault behaviors.
