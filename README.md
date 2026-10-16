@@ -1,7 +1,8 @@
 # VeriDex AI: Autonomous On-Device Scam Protection
 
 > **100% Private, Offline & Zero-Cloud Reliance**  
-> Developed for the **BGSIT Hackathon** — *Theme: Digital Safety and Cybersecurity*  
+> Developed for the **BGSIT Hackathon** — *Theme: Digital Safety and Cybersecurity*
+> **Team Name:** CryptX
 > **Team:** Shreya S, Shirali S, Shreya S, Sinchana M  
 
 ---
@@ -13,6 +14,8 @@ Modern users, especially non-technical users, face phishing, typosquatting, and 
 - **Alert Fatigue:** Invasive warning screens force users to bypass protections entirely.
 
 **VeriDex AI** solves this by running an **autonomous on-device machine learning inference engine (ONNX Runtime)** coupled with **local NLP manipulation cue parsing** and an **encrypted local vault (Windows DPAPI / AES-256)**. Zero browsing data ever leaves the host machine.
+
+**Link to access live website:** URL https://veridex-ai-etuu.onrender.com
 
 ---
 
